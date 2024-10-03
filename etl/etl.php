@@ -9,7 +9,7 @@ require_once 'config.php';
 // Function to fetch football data from the API
 function fetchFootballData() {
     $url = "http://api.football-data.org/v4/competitions/CL/teams";
-    $apiToken = "2a30d1601444472c81c7bc36a8199b31";
+    $apiToken = "2a30d1601444472c81c7bc36a8199b31";  // Set your API token here
     
     // Initialize a cURL session
     $ch = curl_init($url);
@@ -48,36 +48,24 @@ if (!$data || !isset($data['teams'])) {
 
 try {
     // Prepare SQL statement for inserting teams into the database
-    $sql = "INSERT INTO Teams (team_id, team_name, short_name, tla, crest_url, founded, address, website, venue, coach_name, coach_nationality) 
-            VALUES (:team_id, :team_name, :short_name, :tla, :crest_url, :founded, :address, :website, :venue, :coach_name, :coach_nationality)";
+    $sql = "INSERT INTO Teams (team_name, crest_url) 
+            VALUES (:team_name, :crest_url)";
     $stmt = $pdo->prepare($sql);
 
     // Iterate through the teams and insert data
     foreach ($data['teams'] as $team) {
         // Ensure essential data is present
-        if (isset($team['id']) && isset($team['name'])) {
-            // Get the coach information
-            $coach_name = isset($team['coach']['name']) ? $team['coach']['name'] : 'Unknown';
-            $coach_nationality = isset($team['coach']['nationality']) ? $team['coach']['nationality'] : 'Unknown';
+        if (isset($team['name']) && isset($team['crest'])) {
 
             // Execute the SQL statement
             $stmt->execute([
-                ':team_id' => $team['id'],
                 ':team_name' => $team['name'],
-                ':short_name' => $team['shortName'],
-                ':tla' => $team['tla'],
-                ':crest_url' => $team['crest'],
-                ':founded' => $team['founded'],
-                ':address' => $team['address'],
-                ':website' => $team['website'],
-                ':venue' => $team['venue'],
-                ':coach_name' => $coach_name,
-                ':coach_nationality' => $coach_nationality
+                ':crest_url' => $team['crest']
             ]);
 
             echo "Inserted team: " . $team['name'] . "<br>";
         } else {
-            echo "Skipping team due to missing essential data (ID or name).<br>";
+            echo "Skipping team due to missing essential data (name or crest).<br>";
         }
     }
 
