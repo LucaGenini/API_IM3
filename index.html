@@ -1,11 +1,63 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hallo Luca</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>CL Capital</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="images/icon.png">
 </head>
 <body>
-    
+
+    <header>
+        <h1>CL Capital</h1>
+    </header>
+
+    <!-- Intro Section -->
+    <section class="intro">
+        <h2>Willkommen bei CL Capital</h2>
+        <p>Eine Übersicht der Champions-League-Teams dieser Saison mit Marktwerten, Performance und spannenden Analysen. Erfahren Sie, wie Geld den Erfolg beeinflusst.</p>
+        <button class="cta-button">Mehr erfahren</button>
+    </section>
+
+    <!-- Teams Section -->
+    <section class="teams" id="teams">
+        <h2>Teams Übersicht nach Effizienz</h2>
+        <div class="team-card">
+            <h3>Platz 1: Team A (Premier League)</h3>
+            <p>Siege: 3, Niederlagen: 1, Unentschieden: 1</p>
+            <p>Marktwert: 120 Mio. € | Liga-Gewichtung: 1.5</p>
+            <p>Effizienz (Gewichtet): 0.08333</p>
+        </div>
+        <div class="team-card">
+            <h3>Platz 2: Team B (Eredivisie)</h3>
+            <p>Siege: 2, Niederlagen: 2, Unentschieden: 1</p>
+            <p>Marktwert: 150 Mio. € | Liga-Gewichtung: 1.2</p>
+            <p>Effizienz (Gewichtet): 0.05333</p>
+        </div>
+        <div class="team-card">
+            <h3>Platz 3: Team C (Kroatien)</h3>
+            <p>Siege: 1, Niederlagen: 2, Unentschieden: 2</p>
+            <p>Marktwert: 100 Mio. € | Liga-Gewichtung: 1.0</p>
+            <p>Effizienz (Gewichtet): 0.05000</p>
+        </div>
+    </section>
+
+    <!-- Efficiency Comparison Chart Section -->
+    <section class="charts">
+        <h2>Effizienz-Vergleich nach jedem Spiel</h2>
+        <div class="chart">
+            <canvas id="efficiencyChart" width="800" height="400"></canvas>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2024 CL Capital | Alle Rechte vorbehalten</p>
+    </footer>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
