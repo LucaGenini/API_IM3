@@ -28,7 +28,6 @@ header h1 {
 }
 
 /* Hero Section */
-/* Hero Section with Dim Overlay */
 .hero {
     position: relative;
     background-image: url('images/AdobeStock_119949464.jpeg');
@@ -39,7 +38,6 @@ header h1 {
     color: white;
 }
 
-/* Add the dark overlay */
 .hero::before {
     content: "";
     position: absolute;
@@ -47,17 +45,17 @@ header h1 {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* Adjust the opacity (0.5 here) */
+    background-color: rgba(0, 0, 0, 0.5);
     z-index: 1;
 }
 
-/* Ensure the text appears on top of the overlay */
 .hero h2,
 .hero p,
 .hero .cta {
     position: relative;
     z-index: 2;
 }
+
 .hero h2 {
     font-size: 2.5rem;
     margin-bottom: 20px;
@@ -80,7 +78,6 @@ header h1 {
 .hero .cta:hover {
     background-color: #88a42a;
 }
-
 
 .cta-button {
     margin-top: 1.5rem;
@@ -106,6 +103,14 @@ header h1 {
     gap: 2rem;
     text-align: center;
 }
+
+.teams h2 {
+    font-size: 2rem;
+    margin-bottom: 4rem; /* Abstand zur Überschrift noch weiter vergrößert */
+    letter-spacing: 1.1px;
+}
+
+
 
 .team-card {
     background-color: #fff;
@@ -159,7 +164,6 @@ footer {
     font-size: 0.9rem;
 }
 
-//* Style for the toggle button */
 .toggle-button {
     background-color: #ff4757;
     color: white;
@@ -177,5 +181,3 @@ footer {
 .toggle-button:hover {
     background-color: #ff6b81;
 }
-
-

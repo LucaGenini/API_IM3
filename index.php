@@ -16,7 +16,7 @@ try {
 
 try {
     // SQL query to select all teams from the database (only name and crest)
-    $sql = "SELECT team_name, crest_url FROM Teams";
+    $sql = "SELECT team_name, crest_url FROM Teams ORDER BY team_name ASC";
     $stmt = $pdo->query($sql);
     $teams = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
@@ -51,22 +51,23 @@ try {
 
     <!-- Teams Section -->
     <section class="teams" id="teams">
-        <h2>Champions League Teams</h2>
+    <h2 style="margin-bottom: 4rem;">Champions League Teams</h2> <!-- Erhöhter Abstand durch margin-bottom -->
 
-        <?php if (count($teams) > 0): ?>
-            <?php foreach ($teams as $index => $team): ?>
-                <!-- Display first 6 teams, hide the rest -->
-                <div class="team-card <?php if ($index >= 6) echo 'hidden-team'; ?>">
-                    <h3><?php echo htmlspecialchars($team['team_name']); ?></h3>
-                    <img src="<?php echo htmlspecialchars($team['crest_url']); ?>" alt="Wappen von <?php echo htmlspecialchars($team['team_name']); ?>" width="100">
-                </div>
-            <?php endforeach; ?>
-            <!-- Toggle Button -->
-            <button id="toggleButton" class="toggle-button">Mehr Teams anzeigen ▼</button>
-        <?php else: ?>
-            <p>Keine Teams gefunden.</p>
-        <?php endif; ?>
-    </section>
+    <?php if (count($teams) > 0): ?>
+        <?php foreach ($teams as $index => $team): ?>
+            <!-- Display first 6 teams, hide the rest -->
+            <div class="team-card <?php if ($index >= 6) echo 'hidden-team'; ?>">
+                <h3><?php echo htmlspecialchars($team['team_name']); ?></h3>
+                <img src="<?php echo htmlspecialchars($team['crest_url']); ?>" alt="Wappen von <?php echo htmlspecialchars($team['team_name']); ?>" width="100">
+            </div>
+        <?php endforeach; ?>
+        <!-- Toggle Button -->
+        <button id="toggleButton" class="toggle-button">Mehr Teams anzeigen ▼</button>
+    <?php else: ?>
+        <p>Keine Teams gefunden.</p>
+    <?php endif; ?>
+</section>
+
 
     <!-- Efficiency Comparison Chart Section -->
     <section class="charts">
