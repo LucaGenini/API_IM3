@@ -106,9 +106,10 @@ header h1 {
 
 .teams h2 {
     font-size: 2rem;
-    margin-bottom: 4rem; /* Abstand zur Überschrift noch weiter vergrößert */
+    margin-bottom: 113px; /* Etwa 3 cm Abstand zwischen der h2-Überschrift und der Auflistung der Teams */
     letter-spacing: 1.1px;
 }
+
 
 
 
@@ -181,3 +182,8 @@ footer {
 .toggle-button:hover {
     background-color: #ff6b81;
 }
+
+.spacer {
+    height: 3cm; /* Abstand von 3 cm zwischen der Überschrift und den Teams */
+}
+

@@ -49,24 +49,25 @@ try {
         </div>
     </section>
 
-    <!-- Teams Section -->
     <section class="teams" id="teams">
-    <h2 style="margin-bottom: 4rem;">Champions League Teams</h2> <!-- Erhöhter Abstand durch margin-bottom -->
-
+    <h2>Champions League Teams</h2>
+    <div class="spacer"></div> <!-- Neuer Abstandshalter -->
     <?php if (count($teams) > 0): ?>
         <?php foreach ($teams as $index => $team): ?>
-            <!-- Display first 6 teams, hide the rest -->
             <div class="team-card <?php if ($index >= 6) echo 'hidden-team'; ?>">
-                <h3><?php echo htmlspecialchars($team['team_name']); ?></h3>
-                <img src="<?php echo htmlspecialchars($team['crest_url']); ?>" alt="Wappen von <?php echo htmlspecialchars($team['team_name']); ?>" width="100">
+                <a href="team-details.php?team_name=<?php echo urlencode($team['team_name']); ?>" style="text-decoration: none; color: inherit;">
+                    <h3><?php echo htmlspecialchars($team['team_name']); ?></h3>
+                    <img src="<?php echo htmlspecialchars($team['crest_url']); ?>" alt="Wappen von <?php echo htmlspecialchars($team['team_name']); ?>" width="100">
+                </a>
             </div>
         <?php endforeach; ?>
-        <!-- Toggle Button -->
         <button id="toggleButton" class="toggle-button">Mehr Teams anzeigen ▼</button>
     <?php else: ?>
         <p>Keine Teams gefunden.</p>
     <?php endif; ?>
 </section>
+
+
 
 
     <!-- Efficiency Comparison Chart Section -->
