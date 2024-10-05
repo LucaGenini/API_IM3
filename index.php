@@ -15,12 +15,24 @@ try {
 }
 
 try {
-    // SQL query to select all teams from the database (only name and crest)
-    $sql = "SELECT team_name, crest_url FROM Teams ORDER BY team_name ASC";
+    // SQL query to select all teams from the database (only name, crest, market value and league weight)
+    $sql = "SELECT team_name, crest_url, market_value, league_weight FROM Teams ORDER BY team_name ASC";
     $stmt = $pdo->query($sql);
     $teams = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Fetch upcoming matches (example for the next 5 matches)
+    $sqlMatches = "SELECT * FROM Matches ORDER BY match_date ASC LIMIT 5";
+    $stmtMatches = $pdo->query($sqlMatches);
+    $matches = $stmtMatches->fetchAll(PDO::FETCH_ASSOC);
+
 } catch (PDOException $e) {
     die("Error: " . $e->getMessage());
+}
+
+// Function to calculate efficiency
+function calculate_efficiency($market_value, $league_weight, $wins, $losses, $draws) {
+    // Einfaches Berechnungsbeispiel: Effizienz = (Siege * Liga-Gewichtung) / Marktwert
+    return ($wins * $league_weight) / $market_value;
 }
 ?>
 
@@ -45,30 +57,37 @@ try {
         <div>
             <h2>Wie stark beeinflusst Geld den Erfolg in der Champions League?</h2>
             <p>Erkunde die Teams, ihre Marktwerte und deren Performance</p>
-            <a href="#teams" class="cta">Jetzt entdecken</a>
+            <a href="#teams" class="button">Jetzt entdecken</a>
         </div>
     </section>
 
     <section class="teams" id="teams">
-    <h2>Champions League Teams</h2>
-    <div class="spacer"></div> <!-- Neuer Abstandshalter -->
-    <?php if (count($teams) > 0): ?>
-        <?php foreach ($teams as $index => $team): ?>
-            <div class="team-card <?php if ($index >= 6) echo 'hidden-team'; ?>">
-                <a href="team-details.php?team_name=<?php echo urlencode($team['team_name']); ?>" style="text-decoration: none; color: inherit;">
-                    <h3><?php echo htmlspecialchars($team['team_name']); ?></h3>
-                    <img src="<?php echo htmlspecialchars($team['crest_url']); ?>" alt="Wappen von <?php echo htmlspecialchars($team['team_name']); ?>" width="100">
-                </a>
-            </div>
-        <?php endforeach; ?>
-        <button id="toggleButton" class="toggle-button">Mehr Teams anzeigen ▼</button>
-    <?php else: ?>
-        <p>Keine Teams gefunden.</p>
-    <?php endif; ?>
-</section>
-
-
-
+        <h2>Champions League Teams</h2>
+        <div class="spacer"></div>
+        <?php if (count($teams) > 0): ?>
+            <?php foreach ($teams as $index => $team): 
+                // Simulation der Team-Performance (diese Daten kannst du durch echte Ergebnisse ersetzen)
+                $wins = rand(0, 5);
+                $losses = rand(0, 5);
+                $draws = rand(0, 5);
+                $efficiency = calculate_efficiency($team['market_value'], $team['league_weight'], $wins, $losses, $draws);
+            ?>
+                <div class="team-card <?php if ($index >= 6) echo 'hidden-team'; ?>">
+                    <a href="team-details.php?team_name=<?php echo urlencode($team['team_name']); ?>" style="text-decoration: none; color: inherit;">
+                        <h3><?php echo htmlspecialchars($team['team_name']); ?></h3>
+                        <img src="<?php echo htmlspecialchars($team['crest_url']); ?>" alt="Wappen von <?php echo htmlspecialchars($team['team_name']); ?>" width="100">
+                        <p>Marktwert: <?php echo $team['market_value']; ?> Mio. €</p>
+                        <p>Liga-Gewichtung: <?php echo $team['league_weight']; ?></p>
+                        <p>Effizienz: <?php echo round($efficiency, 4); ?></p>
+                        <p>Siege: <?php echo $wins; ?> | Niederlagen: <?php echo $losses; ?> | Unentschieden: <?php echo $draws; ?></p>
+                    </a>
+                </div>
+            <?php endforeach; ?>
+            <button id="toggleButton" class="button">Mehr Teams anzeigen ▼</button>
+        <?php else: ?>
+            <p>Keine Teams gefunden.</p>
+        <?php endif; ?>
+    </section>
 
     <!-- Efficiency Comparison Chart Section -->
     <section class="charts">
@@ -76,6 +95,29 @@ try {
         <div class="chart">
             <canvas id="efficiencyChart" width="800" height="400"></canvas>
         </div>
+    </section>
+
+    <!-- Upcoming Matches Section -->
+    <section class="upcoming-matches">
+        <h2>Bevorstehende 5 Spiele</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Team 1</th>
+                    <th>Team 2</th>
+                    <th>Datum</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($matches as $match): ?>
+                <tr>
+                    <td><?php echo htmlspecialchars($match['team_id']); ?></td>
+                    <td><?php echo htmlspecialchars($match['opponent_id']); ?></td>
+                    <td><?php echo htmlspecialchars($match['match_date']); ?></td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
     </section>
 
     <footer>
