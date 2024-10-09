@@ -15,7 +15,7 @@ try {
 }
 
 try {
-    // SQL query to select all teams from the database (only name, crest, market value and league weight)
+    // SQL query to select all teams from the database (only name, crest, market value, and league weight)
     $sql = "SELECT team_name, crest_url, market_value, league_weight FROM Teams ORDER BY team_name ASC";
     $stmt = $pdo->query($sql);
     $teams = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -31,7 +31,12 @@ try {
 
 // Function to calculate efficiency
 function calculate_efficiency($market_value, $league_weight, $wins, $losses, $draws) {
-    // Einfaches Berechnungsbeispiel: Effizienz = (Siege * Liga-Gewichtung) / Marktwert
+    // Ensure market value and league weight are not zero to prevent division by zero
+    if ($market_value == 0 || $league_weight == 0) {
+        return 0; // Return 0 efficiency if division by zero would occur
+    }
+    
+    // Example calculation: Efficiency = (Wins * League Weight) / Market Value
     return ($wins * $league_weight) / $market_value;
 }
 ?>
