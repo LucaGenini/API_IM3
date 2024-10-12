@@ -171,3 +171,7 @@ footer {
     height: 3cm; /* Abstand von 3 cm zwischen der Überschrift und den Teams */
 }
 
+.chart {
+    width: 90%;
+    margin: 0 auto;
+}

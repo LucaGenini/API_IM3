@@ -14,29 +14,85 @@ try {
     die("Connection failed: " . $e->getMessage());
 }
 
-try {
-    // SQL query to select all teams from the database (only name, crest, market value, and league weight)
-    $sql = "SELECT team_name, crest_url, market_value, league_weight FROM Teams ORDER BY team_name ASC";
+// Funktion, um die Teamdaten abzurufen (mit den neuen Spalten der "Teams"-Tabelle)
+function fetchTeamData($pdo) {
+    $sql = "
+        SELECT 
+            t.team_id,
+            t.team_name,
+            t.short_name,
+            t.tla,
+            t.crest_url,
+            t.founded,
+            t.address,
+            t.website,
+            t.venue,
+            t.coach_name,
+            t.coach_nationality,
+            t.market_value,
+            t.league_weight,
+            
+            -- Siege zählen, wenn das Team zu Hause gespielt hat und der Gewinner HOME_TEAM ist
+            -- oder wenn das Team auswärts gespielt hat und der Gewinner AWAY_TEAM ist.
+            SUM(CASE WHEN (m.home_team_id = t.team_id AND m.winner = 'HOME_TEAM') 
+                        OR (m.away_team_id = t.team_id AND m.winner = 'AWAY_TEAM') 
+                    THEN 1 ELSE 0 END) AS wins,
+            
+            -- Niederlagen zählen, wenn das Team zu Hause gespielt hat und der Gewinner AWAY_TEAM ist
+            -- oder wenn das Team auswärts gespielt hat und der Gewinner HOME_TEAM ist.
+            SUM(CASE WHEN (m.home_team_id = t.team_id AND m.winner = 'AWAY_TEAM') 
+                        OR (m.away_team_id = t.team_id AND m.winner = 'HOME_TEAM') 
+                    THEN 1 ELSE 0 END) AS losses,
+            
+            -- Unentschieden zählen, wenn der Gewinner DRAW ist, unabhängig davon, ob zu Hause oder auswärts
+            SUM(CASE WHEN m.winner = 'DRAW' THEN 1 ELSE 0 END) AS draws,
+            
+            -- Match-Datum für die Chart-Anzeige
+            MAX(m.match_date) as match_date
+        
+        FROM Teams t
+        LEFT JOIN Matches m ON (m.home_team_id = t.team_id OR m.away_team_id = t.team_id)
+        GROUP BY t.team_id  -- Gruppiere nur nach Team
+        ORDER BY t.team_name ASC";
+    
     $stmt = $pdo->query($sql);
-    $teams = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // Fetch upcoming matches (example for the next 5 matches)
-    $sqlMatches = "SELECT * FROM Matches ORDER BY match_date ASC LIMIT 5";
-    $stmtMatches = $pdo->query($sqlMatches);
-    $matches = $stmtMatches->fetchAll(PDO::FETCH_ASSOC);
-
-} catch (PDOException $e) {
-    die("Error: " . $e->getMessage());
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+
+// Funktion, um die letzten 5 Spiele abzurufen (angepasst für die neuen Spalten der "Matches"-Tabelle)
+function fetchRecentMatches($pdo) {
+    $sql = "
+        SELECT 
+            m.match_id, 
+            t1.team_name AS home_team_name, 
+            t2.team_name AS away_team_name, 
+            m.match_date, 
+            m.score, 
+            m.halftime_home, 
+            m.halftime_away, 
+            m.winner, 
+            m.referee_name, 
+            m.referee_nationality 
+        FROM Matches m
+        -- Verknüpfung mit der Teams-Tabelle für Heim- und Auswärtsteam
+        JOIN Teams t1 ON m.home_team_id = t1.team_id
+        JOIN Teams t2 ON m.away_team_id = t2.team_id
+        ORDER BY m.match_date DESC 
+        LIMIT 5";
+    
+    $stmt = $pdo->query($sql);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// Fetch team data and recent matches
+$teams = fetchTeamData($pdo);
+$matches = fetchRecentMatches($pdo);
 
 // Function to calculate efficiency
 function calculate_efficiency($market_value, $league_weight, $wins, $losses, $draws) {
-    // Ensure market value and league weight are not zero to prevent division by zero
     if ($market_value == 0 || $league_weight == 0) {
-        return 0; // Return 0 efficiency if division by zero would occur
+        return 0;
     }
-    
-    // Example calculation: Efficiency = (Wins * League Weight) / Market Value
     return ($wins * $league_weight) / $market_value;
 }
 ?>
@@ -66,25 +122,21 @@ function calculate_efficiency($market_value, $league_weight, $wins, $losses, $dr
         </div>
     </section>
 
+    <!-- Team Cards Section -->
     <section class="teams" id="teams">
         <h2>Champions League Teams</h2>
         <div class="spacer"></div>
         <?php if (count($teams) > 0): ?>
-            <?php foreach ($teams as $index => $team): 
-                // Simulation der Team-Performance (diese Daten kannst du durch echte Ergebnisse ersetzen)
-                $wins = rand(0, 5);
-                $losses = rand(0, 5);
-                $draws = rand(0, 5);
-                $efficiency = calculate_efficiency($team['market_value'], $team['league_weight'], $wins, $losses, $draws);
-            ?>
+            <?php foreach ($teams as $index => $team): ?>
                 <div class="team-card <?php if ($index >= 6) echo 'hidden-team'; ?>">
-                    <a href="team-details.php?team_name=<?php echo urlencode($team['team_name']); ?>" style="text-decoration: none; color: inherit;">
-                        <h3><?php echo htmlspecialchars($team['team_name']); ?></h3>
+                    <a href="team-details.php?team_id=<?php echo urlencode($team['team_id']); ?>" style="text-decoration: none; color: inherit;">
+                        <h3><?php echo htmlspecialchars($team['team_name']); ?> (<?php echo htmlspecialchars($team['tla']); ?>)</h3>
                         <img src="<?php echo htmlspecialchars($team['crest_url']); ?>" alt="Wappen von <?php echo htmlspecialchars($team['team_name']); ?>" width="100">
                         <p>Marktwert: <?php echo $team['market_value']; ?> Mio. €</p>
                         <p>Liga-Gewichtung: <?php echo $team['league_weight']; ?></p>
-                        <p>Effizienz: <?php echo round($efficiency, 4); ?></p>
-                        <p>Siege: <?php echo $wins; ?> | Niederlagen: <?php echo $losses; ?> | Unentschieden: <?php echo $draws; ?></p>
+                        <p>Trainer: <?php echo htmlspecialchars($team['coach_name']); ?> (<?php echo htmlspecialchars($team['coach_nationality']); ?>)</p>
+                        <p>Effizienz: <?php echo round(calculate_efficiency($team['market_value'], $team['league_weight'], $team['wins'], $team['losses'], $team['draws']), 4); ?></p>
+                        <p>Siege: <?php echo $team['wins']; ?> | Niederlagen: <?php echo $team['losses']; ?> | Unentschieden: <?php echo $team['draws']; ?></p>
                     </a>
                 </div>
             <?php endforeach; ?>
@@ -102,23 +154,31 @@ function calculate_efficiency($market_value, $league_weight, $wins, $losses, $dr
         </div>
     </section>
 
-    <!-- Upcoming Matches Section -->
+    <!-- Recent Matches Section -->
     <section class="upcoming-matches">
-        <h2>Bevorstehende 5 Spiele</h2>
+        <h2>Letzte 5 Spiele</h2>
         <table>
             <thead>
                 <tr>
-                    <th>Team 1</th>
-                    <th>Team 2</th>
+                    <th>Heimteam</th>
+                    <th>Auswärtsteam</th>
                     <th>Datum</th>
+                    <th>Ergebnis</th>
+                    <th>Halbzeit</th>
+                    <th>Sieger</th>
+                    <th>Schiedsrichter</th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($matches as $match): ?>
                 <tr>
-                    <td><?php echo htmlspecialchars($match['team_id']); ?></td>
-                    <td><?php echo htmlspecialchars($match['opponent_id']); ?></td>
+                    <td><?php echo htmlspecialchars($match['home_team_name']); ?></td>
+                    <td><?php echo htmlspecialchars($match['away_team_name']); ?></td>
                     <td><?php echo htmlspecialchars($match['match_date']); ?></td>
+                    <td><?php echo htmlspecialchars($match['score']); ?></td>
+                    <td><?php echo htmlspecialchars($match['halftime_home']); ?> - <?php echo htmlspecialchars($match['halftime_away']); ?></td>
+                    <td><?php echo $match['winner'] === 'DRAW' ? 'Unentschieden' : ($match['winner'] === 'HOME_TEAM' ? htmlspecialchars($match['home_team_name']) : htmlspecialchars($match['away_team_name'])); ?></td>
+                    <td><?php echo htmlspecialchars($match['referee_name']); ?> (<?php echo htmlspecialchars($match['referee_nationality']); ?>)</td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -131,32 +191,84 @@ function calculate_efficiency($market_value, $league_weight, $wins, $losses, $dr
 
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="script.js"></script>
-
     <script>
-        // Toggle function for hidden teams
-        document.getElementById('toggleButton').addEventListener('click', function() {
-            var hiddenTeams = document.querySelectorAll('.hidden-team');
-            hiddenTeams.forEach(function(team) {
-                if (team.style.display === 'none' || team.style.display === '') {
-                    team.style.display = 'block';
-                } else {
-                    team.style.display = 'none';
+        document.addEventListener('DOMContentLoaded', function () {
+            // Fetching dynamic data from PHP (team efficiency data for each match)
+            const teamData = <?php echo json_encode($teams); ?>;
+
+            // Initializing an object to store each team's efficiency over matches
+            const teamsEfficiency = {};
+
+            // Function to group efficiency data by team and matches
+            teamData.forEach(team => {
+                const teamName = team.team_name;
+                if (!teamsEfficiency[teamName]) {
+                    teamsEfficiency[teamName] = {
+                        label: teamName,
+                        data: [],
+                        borderColor: getRandomColor(),
+                        fill: false,
+                        tension: 0.1
+                    };
+                }
+
+                const efficiency = calculate_efficiency(team.market_value, team.league_weight, team.wins, team.losses, team.draws);
+                teamsEfficiency[teamName].data.push(efficiency);
+            });
+
+            // Convert object into array of datasets for Chart.js
+            const datasets = Object.values(teamsEfficiency);
+
+            // Ensure there is data before rendering the chart
+            const ctx = document.getElementById('efficiencyChart').getContext('2d');
+            const efficiencyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: teamData.map(team => team.team_name),  // Use team names for the X-axis
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            type: 'category',
+                            title: {
+                                display: true,
+                                text: 'Teams'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Effizienz'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                        }
+                    }
                 }
             });
 
-            // Change button text based on visibility
-            if (this.textContent === 'Mehr Teams anzeigen ▼') {
-                this.textContent = 'Weniger Teams anzeigen ▲';
-            } else {
-                this.textContent = 'Mehr Teams anzeigen ▼';
+            function getRandomColor() {
+                const letters = '0123456789ABCDEF';
+                let color = '#';
+                for (let i = 0; i < 6; i++) {
+                    color += letters[Math.floor(Math.random() * 16)];
+                }
+                return color;
+            }
+
+            // Calculate efficiency function
+            function calculate_efficiency(market_value, league_weight, wins, losses, draws) {
+                return ((wins * league_weight) / market_value).toFixed(4);
             }
         });
-
-        // Initial setup: Hide all hidden-team elements on page load
-        document.querySelectorAll('.hidden-team').forEach(function(team) {
-            team.style.display = 'none';
-        });
     </script>
+
 </body>
 </html>
