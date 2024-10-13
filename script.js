@@ -1,21 +1,13 @@
-// Fetching dynamic data from PHP (simulated here for example purposes)
-const teamsData = <?php echo json_encode(array_column($teams, 'team_name')); ?>;
-const efficiencyValues = <?php echo json_encode(array_map(function($team) {
-    return calculate_efficiency($team['market_value'], $team['league_weight'], $team['wins'], $team['losses'], $team['draws']);
-}, $teams)); ?>;
-
-// Chart.js for the Efficiency Line Chart
-const ctx = document.getElementById('efficiencyChart').getContext('2d');
 const efficiencyChart = new Chart(ctx, {
-    type: 'line',
+    type: 'bar',  // Change 'line' to 'bar'
     data: {
-        labels: teamsData,  // Team names
+        labels: teamsData,  // Team names for x-axis
         datasets: [{
             label: 'Effizienz',
-            data: efficiencyValues,  // Efficiency data calculated in PHP
+            data: efficiencyValues,  // Efficiency data
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
             borderColor: 'rgba(75, 192, 192, 1)',
-            fill: false,
-            tension: 0.1
+            borderWidth: 1
         }]
     },
     options: {

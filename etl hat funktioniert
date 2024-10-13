@@ -1,0 +1,218 @@
+<?php
+// Volles Error Reporting aktivieren
+error_reporting(E_ALL);
+ini_set('display_errors', 1); 
+
+require_once 'config.php';
+
+// Funktion, um Fußball-Daten von der API (Champions League Teams) abzurufen
+function fetchFootballData() {
+    $url = "https://api.football-data.org/v4/competitions/CL/teams"; // HTTPS verwenden
+    $apiToken = "6a5dae7a03df4242810803e8236e8d5d";  // Setze deinen API-Token hier
+
+    // cURL Session initialisieren
+    $ch = curl_init($url); 
+    
+    // cURL Optionen setzen
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+        "X-Auth-Token: $apiToken", // API Token in den Header setzen
+        "Content-Type: application/json" // Den Content-Type als JSON setzen
+    ));
+
+    // Timeout setzen, um hängende Anfragen zu verhindern
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+
+    // SSL-Zertifikatsvalidierung
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2); // 2 bedeutet, dass der Hostname überprüft wird
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true); // SSL-Zertifikat des Peers wird überprüft
+
+    // Optional: Debugging aktivieren
+    curl_setopt($ch, CURLOPT_VERBOSE, true); // Detaillierte Informationen über den cURL-Request ausgeben
+
+    // Die Anfrage ausführen
+    $response = curl_exec($ch);
+
+    // HTTP-Statuscode auslesen
+    $httpStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+    // Auf cURL Fehler prüfen
+    if (curl_errno($ch)) {
+        echo 'cURL Fehler: ' . curl_error($ch);
+        curl_close($ch);
+        return null;
+    }
+
+    // Schließen der cURL Session
+    curl_close($ch);
+
+    // API-Antwort anzeigen, auch bei Fehlern
+    if ($httpStatus !== 200) {
+        echo "Fehler bei der API-Anfrage. HTTP-Status: $httpStatus\n";
+        echo "Antwort: " . $response . "\n";
+        return null;
+    }
+
+    // JSON-Daten decodieren und zurückgeben
+    return json_decode($response, true);
+}
+
+// Funktion aufrufen und Ausgabe überprüfen
+$data = fetchFootballData();
+if ($data) {
+    echo "<pre>";
+    print_r($data); // Gut lesbare Ausgabe der API-Daten
+    echo "</pre>";
+} else {
+    echo "Keine Daten erhalten oder Fehler bei der API-Anfrage.";
+}
+
+
+// Function to fetch matches of a team from the API
+function fetchTeamMatches($teamId, $competition) {
+    $url = "http://api.football-data.org/v4/teams/$teamId/matches?competitions=$competition";
+    $apiToken = "6a5dae7a03df4242810803e8236e8d5d";  // Set your API token here
+
+    // Initialize a cURL session
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+        "X-Auth-Token: $apiToken",
+        "Content-Type: application/json"
+    ));
+
+    // Execute the cURL session and check for errors
+    $response = curl_exec($ch);
+    if (curl_errno($ch)) {
+        echo 'Error: ' . curl_error($ch);
+        return false;
+    }
+    curl_close($ch);
+
+    // Return decoded JSON data
+    return json_decode($response, true);
+}
+
+// Function to check if a team already exists in the database
+function checkTeamExists($pdo, $team_name) {
+    $sql = "SELECT team_id FROM Teams WHERE team_name = :team_name";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([':team_name' => $team_name]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+// Function to insert missing team into the database
+function checkAndInsertTeam($pdo, $team) {
+    // Check if the team already exists using team name to prevent duplicates
+    $existingTeam = checkTeamExists($pdo, $team['name']);
+    
+    if (!$existingTeam) {
+        // Insert the team if it does not exist in the database
+        $sqlInsert = "INSERT INTO Teams (team_id, team_name, crest_url) VALUES (:team_id, :team_name, :crest_url)";
+        $stmtInsert = $pdo->prepare($sqlInsert);
+        $stmtInsert->execute([
+            ':team_id' => $team['id'],
+            ':team_name' => $team['name'],
+            ':crest_url' => isset($team['crest']) ? $team['crest'] : null
+        ]);
+        echo "Inserted missing team: " . $team['name'] . "<br>";
+    } else {
+        echo "Team " . $team['name'] . " already exists in the database.<br>";
+    }
+}
+
+// Function to insert match data into the database
+function insertMatchIntoDB($pdo, $match, $leagueType) {
+    // Check if both home and away teams exist in the Teams table
+    if (isset($match['homeTeam']) && isset($match['awayTeam'])) {
+        checkAndInsertTeam($pdo, $match['homeTeam']);
+        checkAndInsertTeam($pdo, $match['awayTeam']);
+        
+        // Proceed with match insertion after checking teams
+        $team_id = $match['homeTeam']['id'];
+        $opponent_id = $match['awayTeam']['id'];
+        $match_date = isset($match['utcDate']) ? $match['utcDate'] : null;
+        $score = isset($match['score']['fullTime']['homeTeam']) && isset($match['score']['fullTime']['awayTeam']) 
+            ? $match['score']['fullTime']['homeTeam'] . "-" . $match['score']['fullTime']['awayTeam'] 
+            : "N/A";
+        $possession = isset($match['statistics']['possession']) ? $match['statistics']['possession'] : 0;
+        $shots = isset($match['statistics']['shotsOnGoal']) ? $match['statistics']['shotsOnGoal'] : 0;
+
+        if ($team_id && $opponent_id && $match_date) {
+            $sql = "INSERT INTO Matches (team_id, opponent_id, match_date, league, score, possession, shots) 
+                    VALUES (:team_id, :opponent_id, :match_date, :league, :score, :possession, :shots)";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+                ':team_id' => $team_id,
+                ':opponent_id' => $opponent_id,
+                ':match_date' => $match_date,
+                ':league' => $leagueType,
+                ':score' => $score,
+                ':possession' => $possession,
+                ':shots' => $shots
+            ]);
+        } else {
+            echo "Skipping match due to missing essential data (team_id, opponent_id, or match_date).<br>";
+        }
+    } else {
+        echo "Skipping match due to missing homeTeam or awayTeam.<br>";
+    }
+}
+
+// Fetch data from the API
+$data = fetchFootballData();
+
+// Establish database connection
+try {
+    $pdo = new PDO($dsn, $username, $password, $options);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("Connection failed: " . $e->getMessage());
+}
+
+// Check if data fetching was successful
+if (!$data || !isset($data['teams'])) {
+    die("Error: Failed to fetch or decode data from the API.");
+}
+
+// Compare teams in database with API teams
+compareTeamsWithAPI($pdo, $data);
+
+// The rest of your logic remains unchanged...
+try {
+    // Iterate through the teams and insert data
+    foreach ($data['teams'] as $team) {
+        if (isset($team['name']) && isset($team['crest']) && isset($team['id'])) {
+            
+            // Check if the team already exists in the database
+            checkAndInsertTeam($pdo, $team);
+
+            // Fetch matches for the team in Champions League and National League
+            $championsLeagueMatches = fetchTeamMatches($team['id'], "CL");
+            $nationalLeagueMatches = fetchTeamMatches($team['id'], "PL"); // Example for Premier League
+
+            // Insert the match data into the database (assuming Matches table exists)
+            if ($championsLeagueMatches && isset($championsLeagueMatches['matches'])) {
+                foreach ($championsLeagueMatches['matches'] as $match) {
+                    insertMatchIntoDB($pdo, $match, 'Champions League');
+                }
+            }
+
+            if ($nationalLeagueMatches && isset($nationalLeagueMatches['matches'])) {
+                foreach ($nationalLeagueMatches['matches'] as $match) {
+                    insertMatchIntoDB($pdo, $match, 'National League');
+                }
+            }
+
+        } else {
+            echo "Skipping team due to missing essential data (name, crest, or id).<br>";
+        }
+    }
+
+    echo "Data successfully inserted into the database.<br>";
+
+} catch (PDOException $e) {
+    echo "Error: " . $e->getMessage();
+}
+
+?>

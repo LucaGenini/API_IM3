@@ -110,7 +110,7 @@ function calculate_efficiency($market_value, $league_weight, $wins, $losses, $dr
 <body>
 
     <header>
-        <h1>CL Capital 💰</h1>
+        <h1>CL Capitals 💰</h1>
     </header>
 
     <!-- Intro Section -->
@@ -195,6 +195,7 @@ function calculate_efficiency($market_value, $league_weight, $wins, $losses, $dr
         document.addEventListener('DOMContentLoaded', function () {
             // Fetching dynamic data from PHP (team efficiency data for each match)
             const teamData = <?php echo json_encode($teams); ?>;
+            const RecentMatches = <?php echo json_encode($teams); ?>;
 
             // Initializing an object to store each team's efficiency over matches
             const teamsEfficiency = {};
