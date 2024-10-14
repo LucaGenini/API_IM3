@@ -14,7 +14,7 @@ try {
     die("Connection failed: " . $e->getMessage());
 }
 
-// Funktion, um die Teamdaten abzurufen (mit den neuen Spalten der "Teams"-Tabelle)
+// Funktion, um die Teamdaten abzurufen, einschließlich der Effizienzänderungen
 function fetchTeamData($pdo) {
     $sql = "
         SELECT 
@@ -32,34 +32,54 @@ function fetchTeamData($pdo) {
             t.market_value,
             t.league_weight,
             
-            -- Siege zählen, wenn das Team zu Hause gespielt hat und der Gewinner HOME_TEAM ist
-            -- oder wenn das Team auswärts gespielt hat und der Gewinner AWAY_TEAM ist.
+            -- Siege zählen
             SUM(CASE WHEN (m.home_team_id = t.team_id AND m.winner = 'HOME_TEAM') 
                         OR (m.away_team_id = t.team_id AND m.winner = 'AWAY_TEAM') 
                     THEN 1 ELSE 0 END) AS wins,
-            
-            -- Niederlagen zählen, wenn das Team zu Hause gespielt hat und der Gewinner AWAY_TEAM ist
-            -- oder wenn das Team auswärts gespielt hat und der Gewinner HOME_TEAM ist.
+            -- Niederlagen zählen
             SUM(CASE WHEN (m.home_team_id = t.team_id AND m.winner = 'AWAY_TEAM') 
                         OR (m.away_team_id = t.team_id AND m.winner = 'HOME_TEAM') 
                     THEN 1 ELSE 0 END) AS losses,
-            
-            -- Unentschieden zählen, wenn der Gewinner DRAW ist, unabhängig davon, ob zu Hause oder auswärts
+            -- Unentschieden zählen
             SUM(CASE WHEN m.winner = 'DRAW' THEN 1 ELSE 0 END) AS draws,
+            -- Das früheste und das letzte Spieldatum für die Zeitachse
+            MIN(m.match_date) AS first_match_date,
+            MAX(m.match_date) AS last_match_date,
             
-            -- Match-Datum für die Chart-Anzeige
-            MAX(m.match_date) as match_date
-        
+            -- Effizienzänderungen über die Zeit, ausgedrückt in Prozent
+            GROUP_CONCAT(e.efficiency ORDER BY m.match_date ASC) AS efficiency_changes
         FROM Teams t
         LEFT JOIN Matches m ON (m.home_team_id = t.team_id OR m.away_team_id = t.team_id)
-        GROUP BY t.team_id  -- Gruppiere nur nach Team
+        
+        -- Unterabfrage zur Berechnung der Effizienz als prozentuale Änderung für jedes Spiel
+        LEFT JOIN (
+            SELECT 
+                m2.match_id,
+                m2.home_team_id,
+                m2.away_team_id,
+                (CASE 
+                    -- Sieg erhöht die Effizienz um 10%
+                    WHEN (m2.home_team_id = t2.team_id AND m2.winner = 'HOME_TEAM') 
+                         OR (m2.away_team_id = t2.team_id AND m2.winner = 'AWAY_TEAM') 
+                    THEN 10
+                    -- Unentschieden erhöht die Effizienz um 5%
+                    WHEN m2.winner = 'DRAW' THEN 5
+                    -- Niederlage senkt die Effizienz um 10%
+                    ELSE -10
+                END) AS efficiency
+            FROM Teams t2
+            LEFT JOIN Matches m2 ON (m2.home_team_id = t2.team_id OR m2.away_team_id = t2.team_id)
+            ORDER BY m2.match_date ASC
+        ) AS e ON e.match_id = m.match_id
+        
+        GROUP BY t.team_id
         ORDER BY t.team_name ASC";
     
     $stmt = $pdo->query($sql);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-// Funktion, um die letzten 5 Spiele abzurufen (angepasst für die neuen Spalten der "Matches"-Tabelle)
+// Funktion, um die letzten 5 Spiele abzurufen
 function fetchRecentMatches($pdo) {
     $sql = "
         SELECT 
@@ -74,7 +94,6 @@ function fetchRecentMatches($pdo) {
             m.referee_name, 
             m.referee_nationality 
         FROM Matches m
-        -- Verknüpfung mit der Teams-Tabelle für Heim- und Auswärtsteam
         JOIN Teams t1 ON m.home_team_id = t1.team_id
         JOIN Teams t2 ON m.away_team_id = t2.team_id
         ORDER BY m.match_date DESC 
@@ -88,13 +107,6 @@ function fetchRecentMatches($pdo) {
 $teams = fetchTeamData($pdo);
 $matches = fetchRecentMatches($pdo);
 
-// Function to calculate efficiency
-function calculate_efficiency($market_value, $league_weight, $wins, $losses, $draws) {
-    if ($market_value == 0 || $league_weight == 0) {
-        return 0;
-    }
-    return ($wins * $league_weight) / $market_value;
-}
 ?>
 
 <!DOCTYPE html>
@@ -110,7 +122,7 @@ function calculate_efficiency($market_value, $league_weight, $wins, $losses, $dr
 <body>
 
     <header>
-        <h1>CL Capitals 💰</h1>
+        <h1>CL Capital 💰</h1>
     </header>
 
     <!-- Intro Section -->
@@ -135,7 +147,7 @@ function calculate_efficiency($market_value, $league_weight, $wins, $losses, $dr
                         <p>Marktwert: <?php echo $team['market_value']; ?> Mio. €</p>
                         <p>Liga-Gewichtung: <?php echo $team['league_weight']; ?></p>
                         <p>Trainer: <?php echo htmlspecialchars($team['coach_name']); ?> (<?php echo htmlspecialchars($team['coach_nationality']); ?>)</p>
-                        <p>Effizienz: <?php echo round(calculate_efficiency($team['market_value'], $team['league_weight'], $team['wins'], $team['losses'], $team['draws']), 4); ?></p>
+                        <!-- Die Effizienz wird jetzt in JavaScript berechnet und in den Charts angezeigt -->
                         <p>Siege: <?php echo $team['wins']; ?> | Niederlagen: <?php echo $team['losses']; ?> | Unentschieden: <?php echo $team['draws']; ?></p>
                     </a>
                 </div>
@@ -146,43 +158,18 @@ function calculate_efficiency($market_value, $league_weight, $wins, $losses, $dr
         <?php endif; ?>
     </section>
 
-    <!-- Efficiency Comparison Chart Section -->
+    <!-- Efficiency Comparison Bar Chart Section -->
     <section class="charts">
-        <h2>Effizienz-Vergleich nach jedem Spiel</h2>
+        <h2>Team Vergleich: Effizienz und Marktwert</h2>
+        <!-- Bar Chart für Effizienz und Marktwert -->
         <div class="chart">
-            <canvas id="efficiencyChart" width="800" height="400"></canvas>
+            <canvas id="efficiencyBarChart" width="800" height="400"></canvas>
         </div>
-    </section>
 
-    <!-- Recent Matches Section -->
-    <section class="upcoming-matches">
-        <h2>Letzte 5 Spiele</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Heimteam</th>
-                    <th>Auswärtsteam</th>
-                    <th>Datum</th>
-                    <th>Ergebnis</th>
-                    <th>Halbzeit</th>
-                    <th>Sieger</th>
-                    <th>Schiedsrichter</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($matches as $match): ?>
-                <tr>
-                    <td><?php echo htmlspecialchars($match['home_team_name']); ?></td>
-                    <td><?php echo htmlspecialchars($match['away_team_name']); ?></td>
-                    <td><?php echo htmlspecialchars($match['match_date']); ?></td>
-                    <td><?php echo htmlspecialchars($match['score']); ?></td>
-                    <td><?php echo htmlspecialchars($match['halftime_home']); ?> - <?php echo htmlspecialchars($match['halftime_away']); ?></td>
-                    <td><?php echo $match['winner'] === 'DRAW' ? 'Unentschieden' : ($match['winner'] === 'HOME_TEAM' ? htmlspecialchars($match['home_team_name']) : htmlspecialchars($match['away_team_name'])); ?></td>
-                    <td><?php echo htmlspecialchars($match['referee_name']); ?> (<?php echo htmlspecialchars($match['referee_nationality']); ?>)</td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+        <!-- Line Chart für Team Performance (Effizienzänderungen) -->
+        <div class="chart">
+            <canvas id="performanceLineChart" width="800" height="400"></canvas>
+        </div>
     </section>
 
     <footer>
@@ -191,85 +178,14 @@ function calculate_efficiency($market_value, $league_weight, $wins, $losses, $dr
 
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Fetching dynamic data from PHP (team efficiency data for each match)
-            const teamData = <?php echo json_encode($teams); ?>;
-            const RecentMatches = <?php echo json_encode($teams); ?>;
 
-            // Initializing an object to store each team's efficiency over matches
-            const teamsEfficiency = {};
-
-            // Function to group efficiency data by team and matches
-            teamData.forEach(team => {
-                const teamName = team.team_name;
-                if (!teamsEfficiency[teamName]) {
-                    teamsEfficiency[teamName] = {
-                        label: teamName,
-                        data: [],
-                        borderColor: getRandomColor(),
-                        fill: false,
-                        tension: 0.1
-                    };
-                }
-
-                const efficiency = calculate_efficiency(team.market_value, team.league_weight, team.wins, team.losses, team.draws);
-                teamsEfficiency[teamName].data.push(efficiency);
-            });
-
-            // Convert object into array of datasets for Chart.js
-            const datasets = Object.values(teamsEfficiency);
-
-            // Ensure there is data before rendering the chart
-            const ctx = document.getElementById('efficiencyChart').getContext('2d');
-            const efficiencyChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: teamData.map(team => team.team_name),  // Use team names for the X-axis
-                    datasets: datasets
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        x: {
-                            type: 'category',
-                            title: {
-                                display: true,
-                                text: 'Teams'
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Effizienz'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top',
-                        }
-                    }
-                }
-            });
-
-            function getRandomColor() {
-                const letters = '0123456789ABCDEF';
-                let color = '#';
-                for (let i = 0; i < 6; i++) {
-                    color += letters[Math.floor(Math.random() * 16)];
-                }
-                return color;
-            }
-
-            // Calculate efficiency function
-            function calculate_efficiency(market_value, league_weight, wins, losses, draws) {
-                return ((wins * league_weight) / market_value).toFixed(4);
-            }
-        });
+    <!-- Insert team data into a script tag for use in JS -->
+    <script id="teamData" type="application/json">
+        <?php echo json_encode($teams); ?>
     </script>
+
+    <!-- External JS for Charts -->
+    <script src="script.js"></script>
 
 </body>
 </html>
