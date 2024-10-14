@@ -56,10 +56,11 @@ document.addEventListener('DOMContentLoaded', function () {
     calculatedTeams.forEach((team, rank) => {
         const teamCard = document.createElement('div');
         teamCard.classList.add('team-card');
-        if (rank >= 6) {
+        if (rank >= 8) { // Zeigt die ersten 8 Teams (4 oben, 4 unten)
             teamCard.classList.add('hidden-team');
             teamCard.style.display = 'none';
         }
+    
 
         // HTML-Inhalte der Team-Card erstellen
         teamCard.innerHTML = `
