@@ -2,25 +2,24 @@ document.addEventListener('DOMContentLoaded', function () {
     // Fetch team data from PHP (injected as JSON)
     const teamData = JSON.parse(document.getElementById('teamData').textContent);
 
-    // Prepare arrays to store data for the charts
-    const teamNames = [];
-    const marketValues = [];
-    const efficiencies = [];
-    const matchDates = [];
-    const teamEfficienciesOverTime = [];
+    // Arrays to store data for the charts
+    let teamNames = [];
+    let marketValues = [];
+    let efficiencies = [];
+    let matchDates = [];
+    let teamEfficienciesOverTime = [];
 
     // Calculate efficiency for each team and store results
-    const calculatedTeams = teamData.map((team, index) => {
+    const calculatedTeams = teamData.map((team) => {
         const marketValue = team.market_value;
         const leagueWeight = team.league_weight;
         let cumulativeEfficiency = 100;
 
-        // Effizienzänderungen über die Zeit
+        // Efficiency changes over time
         const efficienciesOverTime = [];
-
         if (team.efficiency_changes) {
             const efficiencyChanges = team.efficiency_changes.split(',').map(Number);
-            efficiencyChanges.forEach(change => {
+            efficiencyChanges.forEach((change) => {
                 if (marketValue > 0) {
                     const adjustedChange = (change * leagueWeight) / (marketValue / 100);
                     cumulativeEfficiency += adjustedChange;
@@ -31,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const finalEfficiency = efficienciesOverTime.length > 0 ? efficienciesOverTime[efficienciesOverTime.length - 1] : cumulativeEfficiency;
 
-        // Speichern Sie die Effizienzen über die Zeit für das große Linechart
+        // Store efficiency changes over time for the line chart
         teamEfficienciesOverTime.push({
             name: team.team_name,
             efficiencies: efficienciesOverTime
@@ -44,103 +43,15 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     });
 
-    // Sortiere die Teams nach finaler Effizienz
+    // Sort teams by final efficiency
     calculatedTeams.sort((a, b) => b.finalEfficiency - a.finalEfficiency);
 
-    // Aktualisiere die Team-Cards im HTML
-    const teamsContainer = document.querySelector('.teams');
-    const spacerElement = document.querySelector('.spacer');
-    teamsContainer.innerHTML = '';
-    teamsContainer.appendChild(spacerElement);
-
-    calculatedTeams.forEach((team, rank) => {
-        const teamCard = document.createElement('div');
-        teamCard.classList.add('team-card');
-        if (rank >= 8) { // Zeigt die ersten 8 Teams (4 oben, 4 unten)
-            teamCard.classList.add('hidden-team');
-            teamCard.style.display = 'none';
-        }
-    
-
-        // HTML-Inhalte der Team-Card erstellen
-        teamCard.innerHTML = `
-            <a href="team-details.php?team_id=${encodeURIComponent(team.team_id)}" style="text-decoration: none; color: inherit;">
-                <h3>${rank + 1}. ${team.team_name} (${team.tla})</h3>
-                <img src="${team.crest_url}" alt="Wappen von ${team.team_name}" width="100">
-                <p>Marktwert: ${team.market_value} Mio. €</p>
-                <p>Liga-Gewichtung: ${team.league_weight}</p>
-                <p>Trainer: ${team.coach_name} (${team.coach_nationality})</p>
-                <p>Effizienz: ${team.finalEfficiency.toFixed(2)} %</p>
-                <p>Siege: ${team.wins} | Niederlagen: ${team.losses} | Unentschieden: ${team.draws}</p>
-            </a>
-            <canvas id="lineChart-${team.team_id}" width="300" height="150"></canvas>
-        `;
-
-        teamsContainer.appendChild(teamCard);
-
-        // Erstelle das Linechart für jedes Team
-        const lineChartCtx = document.getElementById(`lineChart-${team.team_id}`).getContext('2d');
-        new Chart(lineChartCtx, {
-            type: 'line',
-            data: {
-                labels: team.efficienciesOverTime.map((_, i) => `Spiel ${i + 1}`),
-                datasets: [{
-                    label: `Effizienz über Zeit - ${team.team_name}`,
-                    data: team.efficienciesOverTime,
-                    fill: false,
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    tension: 0.1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Spiele'
-                        }
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Effizienz (%)'
-                        },
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-    });
-
-    // Füge den Toggle-Button hinzu, um zusätzliche Teams ein-/auszublenden
-    const toggleButton = document.createElement('button');
-    toggleButton.id = 'toggleButton';
-    toggleButton.classList.add('button');
-    toggleButton.textContent = 'Mehr Teams anzeigen ▼';
-    teamsContainer.appendChild(toggleButton);
-
-    // Toggle visibility of additional teams
-    toggleButton.addEventListener('click', function () {
-        const hiddenTeams = document.querySelectorAll('.hidden-team');
-        hiddenTeams.forEach(team => {
-            if (team.style.display === 'none' || team.style.display === '') {
-                team.style.display = 'block';
-                this.textContent = 'Weniger Teams anzeigen ▲';
-            } else {
-                team.style.display = 'none';
-                this.textContent = 'Mehr Teams anzeigen ▼';
-            }
-        });
-    });
-
-    // Daten für die beiden großen Charts vorbereiten
-    calculatedTeams.forEach(team => {
+    // Populate team names, market values, and efficiencies for both charts
+    calculatedTeams.forEach((team) => {
         teamNames.push(team.team_name);
         marketValues.push(team.market_value);
         efficiencies.push(team.finalEfficiency);
 
-        // Sammle Spieldaten für die Zeitachse
         if (!matchDates.length && team.first_match_date) {
             let startDate = new Date(team.first_match_date);
             let endDate = new Date(team.last_match_date);
@@ -151,9 +62,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Create the bar chart (2 bars per team: Efficiency and Market Value)
+    // Initialize Bar Chart (Market Value and Efficiency Comparison)
     const barChartCtx = document.getElementById('efficiencyBarChart').getContext('2d');
-    const efficiencyBarChart = new Chart(barChartCtx, {
+    const barChart = new Chart(barChartCtx, {
         type: 'bar',
         data: {
             labels: teamNames,
@@ -203,9 +114,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Create the line chart (Team performance over time: efficiency changes)
+    // Initialize Line Chart (Performance Over Time with y-axis range from 90 to 150)
     const lineChartCtx = document.getElementById('performanceLineChart').getContext('2d');
-    const performanceLineChart = new Chart(lineChartCtx, {
+    const lineChart = new Chart(lineChartCtx, {
         type: 'line',
         data: {
             labels: matchDates,
@@ -227,12 +138,131 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 },
                 y: {
+                    min: 90, // Set minimum y-axis value to 90
+                    max: 150, // Set maximum y-axis value to 150
                     title: {
                         display: true,
                         text: 'Effizienz (%)'
-                    }
+                    },
+                    beginAtZero: false
                 }
             }
         }
+    });
+
+    // Utility function to filter by top 5
+    function filterTop5TeamsByMetric(metric) {
+        const sortedTeams = [...calculatedTeams].sort((a, b) => b[metric] - a[metric]);
+        return sortedTeams.slice(0, 5);
+    }
+
+    // Utility function to update both charts with the filtered teams
+    function updateBothCharts(filteredTeams) {
+        const filteredTeamNames = filteredTeams.map(team => team.team_name);
+        const filteredEfficiencies = filteredTeams.map(team => team.finalEfficiency);
+        const filteredMarketValues = filteredTeams.map(team => team.market_value);
+
+        // Update Bar Chart
+        barChart.data.labels = filteredTeamNames;
+        barChart.data.datasets[0].data = filteredEfficiencies;
+        barChart.data.datasets[1].data = filteredMarketValues;
+        barChart.update();
+
+        // Update Line Chart
+        const filteredEfficienciesOverTime = filteredTeams.map(team => {
+            const teamData = teamEfficienciesOverTime.find(t => t.name === team.team_name);
+            return {
+                label: teamData.name,
+                data: teamData.efficiencies,
+                fill: false,
+                borderColor: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 1)`,
+                tension: 0.1
+            };
+        });
+        lineChart.data.datasets = filteredEfficienciesOverTime;
+        lineChart.update();
+    }
+
+    // Bar Chart filters
+    document.getElementById('topEfficiencyBtn').addEventListener('click', function () {
+        const top5EfficientTeams = filterTop5TeamsByMetric('finalEfficiency');
+        updateBothCharts(top5EfficientTeams);
+    });
+
+    document.getElementById('topMarketValueBtn').addEventListener('click', function () {
+        const top5MarketValueTeams = filterTop5TeamsByMetric('market_value');
+        updateBothCharts(top5MarketValueTeams);
+    });
+
+    document.getElementById('allTeamsBtn').addEventListener('click', function () {
+        updateBothCharts(calculatedTeams); // Reset to show all teams
+    });
+
+    // Time-based filters for the line chart
+    function filterByTime(startDate) {
+        const filteredMatchDates = matchDates.filter(date => new Date(date) >= startDate);
+        lineChart.data.labels = filteredMatchDates;
+
+        teamEfficienciesOverTime.forEach((teamData, index) => {
+            const filteredEfficiencies = teamData.efficiencies.slice(-filteredMatchDates.length);
+            lineChart.data.datasets[index].data = filteredEfficiencies;
+        });
+
+        lineChart.update();
+    }
+
+    document.getElementById('thisYearBtn').addEventListener('click', function () {
+        const thisYear = new Date(new Date().getFullYear(), 0, 1);
+        filterByTime(thisYear);
+    });
+
+    document.getElementById('last6MonthsBtn').addEventListener('click', function () {
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+        filterByTime(sixMonthsAgo);
+    });
+
+    document.getElementById('lastMonthBtn').addEventListener('click', function () {
+        const oneMonthAgo = new Date();
+        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+        filterByTime(oneMonthAgo);
+    });
+
+    // Add individual line charts to team cards (with the y-axis from 90 to 150)
+    calculatedTeams.forEach(team => {
+        const teamCardChartCtx = document.getElementById(`lineChart-${team.team_id}`).getContext('2d');
+        new Chart(teamCardChartCtx, {
+            type: 'line',
+            data: {
+                labels: team.efficienciesOverTime.map((_, i) => `Spiel ${i + 1}`),
+                datasets: [{
+                    label: `Effizienz über Zeit - ${team.team_name}`,
+                    data: team.efficienciesOverTime,
+                    fill: false,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Spiele'
+                        }
+                    },
+                    y: {
+                        min: 90, // Set minimum y-axis value to 90
+                        max: 150, // Set maximum y-axis value to 150
+                        title: {
+                            display: true,
+                            text: 'Effizienz (%)'
+                        },
+                        beginAtZero: false
+                    }
+                }
+            }
+        });
     });
 });

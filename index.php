@@ -14,7 +14,7 @@ try {
     die("Connection failed: " . $e->getMessage());
 }
 
-// Funktion, um die Teamdaten abzurufen, einschließlich der Effizienzänderungen
+// Function to fetch team data, including efficiency changes
 function fetchTeamData($pdo) {
     $sql = "
         SELECT 
@@ -31,47 +31,34 @@ function fetchTeamData($pdo) {
             t.coach_nationality,
             t.market_value,
             t.league_weight,
-            
-            -- Siege zählen
             SUM(CASE WHEN (m.home_team_id = t.team_id AND m.winner = 'HOME_TEAM') 
                         OR (m.away_team_id = t.team_id AND m.winner = 'AWAY_TEAM') 
                     THEN 1 ELSE 0 END) AS wins,
-            -- Niederlagen zählen
             SUM(CASE WHEN (m.home_team_id = t.team_id AND m.winner = 'AWAY_TEAM') 
                         OR (m.away_team_id = t.team_id AND m.winner = 'HOME_TEAM') 
                     THEN 1 ELSE 0 END) AS losses,
-            -- Unentschieden zählen
             SUM(CASE WHEN m.winner = 'DRAW' THEN 1 ELSE 0 END) AS draws,
-            -- Das früheste und das letzte Spieldatum für die Zeitachse
             MIN(m.match_date) AS first_match_date,
             MAX(m.match_date) AS last_match_date,
-            
-            -- Effizienzänderungen über die Zeit, ausgedrückt in Prozent
             GROUP_CONCAT(e.efficiency ORDER BY m.match_date ASC) AS efficiency_changes
         FROM Teams t
         LEFT JOIN Matches m ON (m.home_team_id = t.team_id OR m.away_team_id = t.team_id)
-        
-        -- Unterabfrage zur Berechnung der Effizienz als prozentuale Änderung für jedes Spiel
         LEFT JOIN (
             SELECT 
                 m2.match_id,
                 m2.home_team_id,
                 m2.away_team_id,
                 (CASE 
-                    -- Sieg erhöht die Effizienz um 10%
                     WHEN (m2.home_team_id = t2.team_id AND m2.winner = 'HOME_TEAM') 
                          OR (m2.away_team_id = t2.team_id AND m2.winner = 'AWAY_TEAM') 
                     THEN 10
-                    -- Unentschieden erhöht die Effizienz um 5%
                     WHEN m2.winner = 'DRAW' THEN 5
-                    -- Niederlage senkt die Effizienz um 10%
                     ELSE -10
                 END) AS efficiency
             FROM Teams t2
             LEFT JOIN Matches m2 ON (m2.home_team_id = t2.team_id OR m2.away_team_id = t2.team_id)
             ORDER BY m2.match_date ASC
         ) AS e ON e.match_id = m.match_id
-        
         GROUP BY t.team_id
         ORDER BY t.team_name ASC";
     
@@ -79,7 +66,7 @@ function fetchTeamData($pdo) {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-// Funktion, um die letzten 5 Spiele abzurufen
+// Function to fetch the last 5 matches
 function fetchRecentMatches($pdo) {
     $sql = "
         SELECT 
@@ -140,16 +127,17 @@ $matches = fetchRecentMatches($pdo);
         <div class="spacer"></div>
         <?php if (count($teams) > 0): ?>
             <?php foreach ($teams as $index => $team): ?>
-                <div class="team-card <?php if ($index >= 6) echo 'hidden-team'; ?>">
+                <div class="team-card">
                     <a href="team-details.php?team_id=<?php echo urlencode($team['team_id']); ?>" style="text-decoration: none; color: inherit;">
                         <h3><?php echo htmlspecialchars($team['team_name']); ?> (<?php echo htmlspecialchars($team['tla']); ?>)</h3>
                         <img src="<?php echo htmlspecialchars($team['crest_url']); ?>" alt="Wappen von <?php echo htmlspecialchars($team['team_name']); ?>" width="100">
                         <p>Marktwert: <?php echo $team['market_value']; ?> Mio. €</p>
                         <p>Liga-Gewichtung: <?php echo $team['league_weight']; ?></p>
                         <p>Trainer: <?php echo htmlspecialchars($team['coach_name']); ?> (<?php echo htmlspecialchars($team['coach_nationality']); ?>)</p>
-                        <!-- Die Effizienz wird jetzt in JavaScript berechnet und in den Charts angezeigt -->
                         <p>Siege: <?php echo $team['wins']; ?> | Niederlagen: <?php echo $team['losses']; ?> | Unentschieden: <?php echo $team['draws']; ?></p>
                     </a>
+                    <!-- Line chart for each team (using unique canvas IDs) -->
+                    <canvas id="lineChart-<?php echo $team['team_id']; ?>" width="300" height="150"></canvas>
                 </div>
             <?php endforeach; ?>
             <button id="toggleButton" class="button">Mehr Teams anzeigen ▼</button>
@@ -161,12 +149,27 @@ $matches = fetchRecentMatches($pdo);
     <!-- Efficiency Comparison Bar Chart Section -->
     <section class="charts">
         <h2>Team Vergleich: Effizienz und Marktwert</h2>
-        <!-- Bar Chart für Effizienz und Marktwert -->
+
+        <!-- Bar Chart Filters -->
+        <div class="chart-filters">
+            <button id="topEfficiencyBtn" class="button">Top 5 Most Efficient Clubs</button>
+            <button id="topMarketValueBtn" class="button">Top 5 Highest Market Value</button>
+            <button id="allTeamsBtn" class="button">All Teams</button>
+        </div>
+
+        <!-- Bar Chart for Efficiency and Market Value -->
         <div class="chart">
             <canvas id="efficiencyBarChart" width="800" height="400"></canvas>
         </div>
 
-        <!-- Line Chart für Team Performance (Effizienzänderungen) -->
+        <!-- Line Chart Filters -->
+        <div class="chart-filters">
+            <button id="thisYearBtn" class="button">This Year</button>
+            <button id="last6MonthsBtn" class="button">Last 6 Months</button>
+            <button id="lastMonthBtn" class="button">Last Month</button>
+        </div>
+
+        <!-- Line Chart for Team Performance (Efficiency Changes) -->
         <div class="chart">
             <canvas id="performanceLineChart" width="800" height="400"></canvas>
         </div>
