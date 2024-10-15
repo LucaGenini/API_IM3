@@ -2,7 +2,7 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #efef9e;
+    background-color: #f4f4f9;
     color: #333;
 }
 
@@ -20,142 +20,61 @@ header h1 {
     letter-spacing: 1.2px;
 }
 
-.intro {
-    padding: 2rem;
-    background-color: #e0e4cc;
-    text-align: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Hero Section */
-.hero {
-    position: relative;
-    background-image: url('images/AdobeStock_119949464.jpeg');
-    background-size: cover;
-    background-position: center;
-    padding: 100px 0;
-    text-align: center;
-    color: white;
-}
-
-.hero::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1;
-}
-
-.hero h2,
-.hero p,
-.hero .button {
-    position: relative;
-    z-index: 2;
-}
-
-.hero h2 {
-    font-size: 2.5rem;
-    margin-bottom: 20px;
-}
-
-.hero p {
-    font-size: 1.25rem;
-    margin-bottom: 30px;
-}
-
-.hero .button {
-    background-color: #9FC131;
-    color: white;
-    padding: 10px 20px;
-    text-decoration: none;
-    font-size: 1.25rem;
-    border-radius: 5px;
-}
-
-.hero .button:hover {
-    background-color: #88a42a;
-}
-
-.button {
-    margin-top: 1.5rem;
-    padding: 10px 25px;
-    background-color: #9FC131;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 1.1rem;
-    cursor: pointer;
-    width: 100%;
-    transition: background-color 0.3s ease;
-}
-
-.button:hover {
-    background-color: #85a826;
-}
-
-.teams {
-    padding: 2rem;
+/* Container for the team details with better layout handling */
+.team-details-container {
     display: flex;
-    flex-wrap: wrap;
     justify-content: center;
-    gap: 2rem;
-    text-align: center;
-}
-
-.teams h2 {
-    font-size: 2rem;
-    margin-bottom: 113px; /* Etwa 3 cm Abstand zwischen der h2-Überschrift und der Auflistung der Teams */
-    letter-spacing: 1.1px;
-    width:100%;
-}
-
-
-
-
-.team-card {
-    background-color: #fff;
+    align-items: flex-start;
+    flex-direction: column;
+    margin: 2rem auto;
+    max-width: 1200px;
+    padding: 1rem;
+    background-color: #f8f8d8; /* Slightly lighter background */
     border-radius: 12px;
-    padding: 1.5rem;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    width: calc(33% - 2rem);
-    max-width: 350px; /* Optionale Begrenzung der Maximalbreite */
 }
 
-.team-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+/* Team logo on the left side */
+.team-logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: 1.5rem;
 }
 
-.team-card h3 {
-    font-size: 1.6rem;
+.team-logo {
+    width: 200px;
+    height: auto;
     margin-bottom: 1rem;
 }
 
-.team-card p {
-    font-size: 1rem;
-    margin: 0.4rem 0;
-    color: #555;
-}
-
-.charts {
-    padding: 3rem;
-    background-color: #f9f9f9;
+/* Right-side team details */
+.team-details-info {
+    display: flex;
+    flex-direction: column;
     text-align: center;
+    width: 100%;
 }
 
-.charts h2 {
-    font-size: 2rem;
-    margin-bottom: 1.5rem;
-    letter-spacing: 1.1px;
+.team-details-info p {
+    font-size: 1.2rem;
+    margin: 0.8rem 0;
 }
 
-.chart {
-    width: 80%;
-    margin: 0 auto;
+.team-details-info strong {
+    font-weight: bold;
+}
+
+.team-details-info a {
+    color: #052941;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.team-details-info a:hover {
+    text-decoration: underline;
 }
 
 footer {
@@ -165,13 +84,4 @@ footer {
     padding: 1rem;
     margin-top: 2rem;
     font-size: 0.9rem;
-}
-
-.spacer {
-    height: 3cm; /* Abstand von 3 cm zwischen der Überschrift und den Teams */
-}
-
-.chart {
-    width: 90%;
-    margin: 0 auto;
 }
