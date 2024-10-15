@@ -58,14 +58,14 @@ function fetchTeamData($pdo) {
                 m2.home_team_id,
                 m2.away_team_id,
                 (CASE 
-                    -- Sieg erhöht die Effizienz um 10%
+                    -- Sieg erhöht die Effizienz um 3%
                     WHEN (m2.home_team_id = t2.team_id AND m2.winner = 'HOME_TEAM') 
                          OR (m2.away_team_id = t2.team_id AND m2.winner = 'AWAY_TEAM') 
-                    THEN 10
-                    -- Unentschieden erhöht die Effizienz um 5%
-                    WHEN m2.winner = 'DRAW' THEN 5
-                    -- Niederlage senkt die Effizienz um 10%
-                    ELSE -10
+                    THEN 3
+                    -- Unentschieden erhöht die Effizienz um 1%
+                    WHEN m2.winner = 'DRAW' THEN 1
+                    -- Niederlage senkt die Effizienz um 2%
+                    ELSE -2
                 END) AS efficiency
             FROM Teams t2
             LEFT JOIN Matches m2 ON (m2.home_team_id = t2.team_id OR m2.away_team_id = t2.team_id)

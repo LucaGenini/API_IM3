@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const efficiencyChanges = team.efficiency_changes.split(',').map(Number);
             efficiencyChanges.forEach(change => {
                 if (marketValue > 0) {
-                    const adjustedChange = (change * leagueWeight) / marketValue;
+                    const adjustedChange = (change * leagueWeight) / (marketValue / 100);
                     cumulativeEfficiency += adjustedChange;
                 }
                 efficienciesOverTime.push(cumulativeEfficiency.toFixed(2));
