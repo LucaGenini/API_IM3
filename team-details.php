@@ -48,19 +48,13 @@ if ($team_id) {
 
     <section class="team-details-container">
         <?php if ($team_details): ?>
-            <!-- Logo Section -->
-            <div class="team-logo-container">
-                <img src="<?php echo htmlspecialchars($team_details['crest_url']); ?>" alt="Wappen von <?php echo htmlspecialchars($team_details['team_name']); ?>" class="team-logo">
+            <div class="team-details-card">
                 <h2><?php echo htmlspecialchars($team_details['team_name']); ?></h2>
-            </div>
-            
-            <!-- Details Section -->
-            <div class="team-details-info">
+                <img src="<?php echo htmlspecialchars($team_details['crest_url']); ?>" alt="Wappen von <?php echo htmlspecialchars($team_details['team_name']); ?>" class="team-logo">
                 <p><strong>Marktwert:</strong> <?php echo htmlspecialchars($team_details['market_value']); ?> Mio. €</p>
                 <p><strong>Gegründet:</strong> <?php echo htmlspecialchars($team_details['founded'] ?? 'Nicht verfügbar'); ?></p>
                 <p><strong>Trainer:</strong> <?php echo htmlspecialchars($team_details['coach_name'] ?? 'Nicht verfügbar'); ?></p>
                 <p><strong>Stadion:</strong> <?php echo htmlspecialchars($team_details['venue'] ?? 'Nicht verfügbar'); ?></p>
-                <p><strong>Land:</strong> <?php echo htmlspecialchars($team_details['country'] ?? 'Nicht verfügbar'); ?></p>
                 <p><strong>Website:</strong> <a href="<?php echo htmlspecialchars($team_details['website']); ?>" target="_blank"><?php echo htmlspecialchars($team_details['website']); ?></a></p>
             </div>
         <?php else: ?>
@@ -74,3 +68,5 @@ if ($team_id) {
     
 </body>
 </html>
+
+
