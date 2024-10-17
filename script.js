@@ -265,5 +265,31 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
-});
 
+    // Toggle visibility of additional teams
+    const toggleButton = document.getElementById('toggleButton');
+    const teamCards = document.querySelectorAll('.team-card');
+    const visibleTeamsCount = 5; // Show 5 teams by default
+    let showAll = false; // Flag to track current toggle state
+
+    // Initially hide all teams beyond the first 5
+    teamCards.forEach((card, index) => {
+        if (index >= visibleTeamsCount) {
+            card.style.display = 'none';
+        }
+    });
+
+    // Toggle the visibility of additional teams when the button is clicked
+    toggleButton.addEventListener('click', function () {
+        showAll = !showAll; // Toggle state
+
+        teamCards.forEach((card, index) => {
+            if (index >= visibleTeamsCount) {
+                card.style.display = showAll ? 'block' : 'none';
+            }
+        });
+
+        // Update button text based on the current state
+        toggleButton.textContent = showAll ? 'Weniger Teams anzeigen ▲' : 'Mehr Teams anzeigen ▼';
+    });
+});
