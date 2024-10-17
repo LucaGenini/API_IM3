@@ -96,6 +96,15 @@ header h1 {
     background-color: #85a826;
 }
 
+.introduction {
+    padding: 2rem;
+    background-color: #052941;
+    color: #fff;
+    text-align: center;
+    font-size: 120%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
 .teams {
     padding: 2rem;
     display: flex;
@@ -109,9 +118,8 @@ header h1 {
     font-size: 2rem;
     margin-bottom: 113px; /* Etwa 3 cm Abstand zwischen der h2-Überschrift und der Auflistung der Teams */
     letter-spacing: 1.1px;
-    width:100%;
+    width: 100%;
 }
-
 
 .team-card {
     background-color: #fff;
@@ -154,6 +162,21 @@ header h1 {
 .chart {
     width: 80%;
     margin: 0 auto;
+}
+
+/* Flexbox layout for the filter buttons */
+.chart-filters {
+    display: flex;
+    justify-content: center; /* Center the buttons in the row */
+    gap: 15px; /* Space between the buttons */
+    margin-bottom: 20px; /* Space below the filters */
+}
+
+.chart-filters .button {
+    flex-grow: 1;  /* Optional: makes the buttons stretch to fill available space */
+    margin: 0 10px; /* Adds margin between buttons */
+    width: auto; /* Reset width to auto for inline appearance */
+    max-width: 200px; /* Optional: Limit button width for better layout */
 }
 
 footer {

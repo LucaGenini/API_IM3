@@ -121,13 +121,28 @@ $matches = fetchRecentMatches($pdo);
         </div>
     </section>
 
+    ><section class="introduction">
+    
+    <p>Im Fußball wird oft behauptet, dass der Marktwert und die finanziellen Mittel eines Teams entscheidend für den sportlichen Erfolg sind. Doch wie groß ist der tatsächliche Einfluss von Geld auf die Leistung? Mit unserem Projekt wollen wir genau diese Frage untersuchen.
+    Wir analysieren, wie sich Teams mit hohem Marktwert im Vergleich zu finanziell kleineren, ressourcenschwächeren Vereinen schlagen. Dazu betrachten wir alle Spiele der diesjährigen Champions-League-Mannschaften – sowohl nationale als auch internationale Wettbewerbe. Unser Ziel: Herauszufinden, ob finanzstarke Teams tatsächlich effizienter agieren und ob der Marktwert einen signifikanten Vorteil im Wettkampf verschafft.
+    Erfahre, wie groß der Einfluss von Geld im Fußball wirklich ist und ob der Marktwert der Schlüssel zum Erfolg ist – oder ob andere Faktoren eine wichtigere Rolle spielen.
+    <br> <br>Kernaussagen: Stabilität durch hohen Marktwert: Ein hoher Marktwert sorgt für Stabilität in den Ergebnissen, aber die Steigerung der Effizienz ist oft geringer, da die Erwartungshaltung an große Teams höher ist.
+    Risikoarme Bewegungen für kleine Teams: Kleinere Teams mit geringeren Marktwerten können sich risikofreier bewegen und haben oft mehr Raum für Überraschungen, da die Erwartungshaltung niedriger ist.
+    Effizienz hängt nicht nur vom Geld ab: Unsere Analyse zeigt, dass Marktstarke Teams nicht automatisch effizienter agieren als marktschwächere Teams. Andere Faktoren wie Taktik, Teamgeist und Trainerentscheidungen spielen eine wesentliche Rolle.
+    <br> <br>Effizienzberechnung: Um die Effizienz eines Teams zu berechnen, verwenden wir eine Formel, die Marktwert, Liga-Stärke und Spielergebnisse berücksichtigt. Jede Effizienzänderung wird nach folgender Formel angepasst:
+    Anpassung der Effizienzänderung: change: Dieser Wert wird in der SQL-Abfrage berechnet und beträgt 10, 5 oder -10, je nach Spielergebnis (Sieg, Unentschieden, Niederlage).
+    leagueWeight: Berücksichtigt die Stärke der Liga. Ein höheres Gewicht bedeutet, dass Effizienzänderungen stärker wirken.
+    marketValue: Der Marktwert des Teams. Ein höherer Marktwert bedeutet, dass Änderungen einen geringeren Einfluss auf die Effizienz haben. Ein großes, starkes Team reagiert also weniger empfindlich auf Änderungen als ein kleineres Team.</p>
+
+    </section>
+
     <!-- Team Cards Section -->
     <section class="teams" id="teams">
         <h2>Champions League Teams</h2>
         <div class="spacer"></div>
         <?php if (count($teams) > 0): ?>
             <?php foreach ($teams as $index => $team): ?>
-                <div class="team-card">
+                <div class="team-card" data-team-id="<?php echo htmlspecialchars($team['team_id']); ?>">
                     <a href="team-details.php?team_id=<?php echo urlencode($team['team_id']); ?>" style="text-decoration: none; color: inherit;">
                         <h3><?php echo htmlspecialchars($team['team_name']); ?> (<?php echo htmlspecialchars($team['tla']); ?>)</h3>
                         <img src="<?php echo htmlspecialchars($team['crest_url']); ?>" alt="Wappen von <?php echo htmlspecialchars($team['team_name']); ?>" width="100">
