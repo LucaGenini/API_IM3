@@ -101,7 +101,7 @@ header h1 {
     padding: 2rem;
     background-color: #052941;
     color: #fff;
-    text-align: center;
+    text-align: left;
     font-size: 120%;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
