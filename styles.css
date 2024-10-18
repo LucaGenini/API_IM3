@@ -1,3 +1,4 @@
+/* General Body Styling */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
@@ -128,7 +129,7 @@ header h1 {
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     width: calc(33% - 2rem);
-    max-width: 350px; /* Optionale Begrenzung der Maximalbreite */
+    max-width: 350px;
 }
 
 .team-card:hover {
@@ -147,6 +148,7 @@ header h1 {
     color: #555;
 }
 
+/* Charts Section */
 .charts {
     padding: 3rem;
     background-color: #f9f9f9;
@@ -167,16 +169,16 @@ header h1 {
 /* Flexbox layout for the filter buttons */
 .chart-filters {
     display: flex;
-    justify-content: center; /* Center the buttons in the row */
-    gap: 15px; /* Space between the buttons */
-    margin-bottom: 20px; /* Space below the filters */
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
 }
 
 .chart-filters .button {
-    flex-grow: 1;  /* Optional: makes the buttons stretch to fill available space */
-    margin: 0 10px; /* Adds margin between buttons */
-    width: auto; /* Reset width to auto for inline appearance */
-    max-width: 200px; /* Optional: Limit button width for better layout */
+    flex-grow: 1;
+    margin: 0 10px;
+    width: auto;
+    max-width: 200px;
 }
 
 footer {
@@ -189,10 +191,82 @@ footer {
 }
 
 .spacer {
-    height: 3cm; /* Abstand von 3 cm zwischen der Überschrift und den Teams */
+    height: 3cm;
 }
 
 .chart {
     width: 90%;
     margin: 0 auto;
+}
+
+/* Mobile Responsiveness */
+
+@media (max-width: 768px) {
+    /* General text scaling */
+    header h1 {
+        font-size: 1.8rem;
+    }
+
+    .hero h2 {
+        font-size: 1.8rem;
+    }
+
+    .hero p {
+        font-size: 1rem;
+    }
+
+    .team-card {
+        width: calc(100% - 2rem);
+    }
+
+    /* Adjust charts for better readability on mobile */
+    .chart canvas {
+        height: 300px !important;
+        width: 100% !important;
+    }
+
+    /* Single chart per row */
+    .team-card canvas {
+        height: 200px !important;
+        width: 100% !important;
+    }
+
+    .charts {
+        padding: 1.5rem;
+    }
+
+    .chart-filters {
+        flex-direction: column;
+    }
+    
+    .chart-filters .button {
+        margin: 10px 0;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Further reduce font sizes for smaller screens */
+    header h1 {
+        font-size: 1.5rem;
+    }
+
+    .hero h2 {
+        font-size: 1.5rem;
+    }
+
+    .hero p {
+        font-size: 0.9rem;
+    }
+
+    .team-card h3 {
+        font-size: 1.2rem;
+    }
+
+    .team-card p {
+        font-size: 0.9rem;
+    }
+
+    .charts h2 {
+        font-size: 1.5rem;
+    }
 }

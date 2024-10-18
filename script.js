@@ -176,50 +176,52 @@ document.addEventListener('DOMContentLoaded', function () {
         const barChart = new Chart(barChartCtx, {
             type: 'bar',
             data: {
-                labels: teamNames,
-                datasets: [
-                    {
-                        label: 'Effizienz (%)',
-                        data: efficiencies,
-                        backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Marktwert (Mio. €)',
-                        data: marketValues,
-                        backgroundColor: 'rgba(255, 159, 64, 0.5)',
-                        borderColor: 'rgba(255, 159, 64, 1)',
-                        borderWidth: 1
-                    }
-                ]
+            labels: teamNames,
+            datasets: [
+                {
+                label: 'Effizienz (%)',
+                data: efficiencies,
+                backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+                },
+                {
+                label: 'Marktwert (Mio. €)',
+                data: marketValues,
+                backgroundColor: 'rgba(255, 159, 64, 0.5)',
+                borderColor: 'rgba(255, 159, 64, 1)',
+                borderWidth: 1
+                }
+            ]
             },
             options: {
-                responsive: true,
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Teams'
-                        },
-                        ticks: {
-                            autoSkip: false
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Wert'
-                        }
-                    }
+            responsive: true,
+            scales: {
+                x: {
+                title: {
+                    display: true,
+                    text: 'Teams'
                 },
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top',
-                    }
+                ticks: {
+                    autoSkip: false,          // Disable automatic skipping of labels
+                    maxRotation: 45,         // Rotate labels to fit better
+                    minRotation: 45           // Prevent too much rotation
                 }
+                },
+                y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Wert'
+                }
+                }
+            },
+            plugins: {
+                legend: {
+                display: true,
+                position: 'top',
+                }
+            }
             }
         });
 
@@ -228,36 +230,95 @@ document.addEventListener('DOMContentLoaded', function () {
         const lineChart = new Chart(lineChartCtx, {
             type: 'line',
             data: {
-                labels: matchDates,
-                datasets: teamEfficienciesOverTime.map(team => ({
-                    label: team.name,
-                    data: team.efficiencies,
-                    fill: false,
-                    borderColor: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 1)`,
-                    tension: 0.1
-                }))
+            labels: matchDates,
+            datasets: teamEfficienciesOverTime.map(team => ({
+                label: team.name,
+                data: team.efficiencies,
+                fill: false,
+                borderColor: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 1)`,
+                tension: 0.1
+            }))
             },
             options: {
-                responsive: true,
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Spieldatum'
-                        }
-                    },
-                    y: {
-                        min: 90, // Set minimum y-axis value to 90
-                        max: 150, // Set maximum y-axis value to 150
-                        title: {
-                            display: true,
-                            text: 'Effizienz (%)'
-                        },
-                        beginAtZero: false
-                    }
+            responsive: true,
+            scales: {
+                x: {
+                title: {
+                    display: true,
+                    text: 'Spieldatum'
+                },
+                ticks: {
+                    autoSkip: true,         // Automatically skip some labels to prevent crowding
+                    maxTicksLimit: 15,      // Limit the number of ticks shown
+                    maxRotation: 90,        // Rotate labels to fit better
+                    minRotation: 0
+                }
+                },
+                y: {
+                min: 90, // Set minimum y-axis value to 90
+                max: 150, // Set maximum y-axis value to 150
+                title: {
+                    display: true,
+                    text: 'Effizienz (%)'
+                },
+                beginAtZero: false
                 }
             }
+            }
         });
+
+        // Make the charts mobile responsive
+        function makeChartsResponsive() {
+            if (window.innerWidth < 600) {
+                // Mobile-specific settings
+                barChart.options.scales.x.ticks.autoSkip = true;
+                barChart.options.scales.x.ticks.maxTicksLimit = 5; // Show fewer labels on mobile
+                barChart.options.scales.x.ticks.maxRotation = 45;
+                barChart.options.scales.x.ticks.minRotation = 45;
+
+                lineChart.options.scales.x.ticks.autoSkip = true;
+                lineChart.options.scales.x.ticks.maxTicksLimit = 5; // Show fewer labels on mobile
+                lineChart.options.scales.x.ticks.maxRotation = 45;
+                lineChart.options.scales.x.ticks.minRotation = 45;
+
+                lineChart.options.scales.y.max = 150; // Set maximum y-axis value to 150 on mobile
+
+                // Keep the legend at the top on mobile
+                barChart.options.plugins.legend.position = 'top';
+                lineChart.options.plugins.legend.position = 'top';
+
+                // Optional: Hide the legend if there are too many teams on mobile
+                lineChart.options.plugins.legend.display = false;
+            } else {
+                // Reset to default settings on larger screens
+                barChart.options.scales.x.ticks.autoSkip = true;
+                barChart.options.scales.x.ticks.maxTicksLimit = 15;
+                barChart.options.scales.x.ticks.maxRotation = 90;
+                barChart.options.scales.x.ticks.minRotation = 0;
+
+                lineChart.options.scales.x.ticks.autoSkip = true;
+                lineChart.options.scales.x.ticks.maxTicksLimit = 15;
+                lineChart.options.scales.x.ticks.maxRotation = 90;
+                lineChart.options.scales.x.ticks.minRotation = 0;
+
+                lineChart.options.scales.y.max = 150; // Ensure maximum y-axis value is 150 on larger screens too
+
+                // Reset the legend position and display
+                barChart.options.plugins.legend.position = 'top';
+                lineChart.options.plugins.legend.position = 'top';
+                lineChart.options.plugins.legend.display = true;
+            }
+
+            // Update the charts after changing the options
+            barChart.update();
+            lineChart.update();
+        }
+
+        // Adjust the charts when the window is resized
+        window.addEventListener('resize', makeChartsResponsive);
+
+        // Call the function initially to apply settings based on current window size
+        makeChartsResponsive();
     }
 
     // Function to hide/show extra teams
