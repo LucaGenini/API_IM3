@@ -1,12 +1,21 @@
-/* General Body Styling */
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+/* Ensure that the body and html take up the full height of the viewport */
+html, body {
+    height: 100%;
     margin: 0;
     padding: 0;
+}
+
+/* Flexbox layout for the whole page */
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #efef9e;
     color: #333;
 }
 
+/* General Body Styling */
 header {
     background: #052941; 
     color: #fff;
@@ -188,6 +197,8 @@ footer {
     padding: 1rem;
     margin-top: 2rem;
     font-size: 0.9rem;
+    width: 100%;
+    position: relative;
 }
 
 .spacer {
@@ -199,8 +210,12 @@ footer {
     margin: 0 auto;
 }
 
-/* Mobile Responsiveness */
+/* Main content area */
+.team-details-container {
+    flex-grow: 1; /* Ensures the content expands to take available space */
+}
 
+/* Mobile Responsiveness */
 @media (max-width: 768px) {
     /* General text scaling */
     header h1 {
