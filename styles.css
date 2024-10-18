@@ -126,7 +126,7 @@ header h1 {
 
 .teams h2 {
     font-size: 2rem;
-    margin-bottom: 113px; /* Etwa 3 cm Abstand zwischen der h2-Überschrift und der Auflistung der Teams */
+    margin-bottom: 40px; /* Etwa 3 cm Abstand zwischen der h2-Überschrift und der Auflistung der Teams */
     letter-spacing: 1.1px;
     width: 100%;
 }
@@ -180,7 +180,8 @@ header h1 {
     display: flex;
     justify-content: center;
     gap: 15px;
-    margin-bottom: 20px;
+    margin-bottom: 40px;
+    padding: 40px;
 }
 
 .chart-filters .button {
@@ -197,13 +198,12 @@ footer {
     padding: 1rem;
     margin-top: 2rem;
     font-size: 0.9rem;
-    width: 100%;
-    position: relative;
+    position: relative; /* Change from sticky to relative */
+    bottom: 0;
 }
 
-.spacer {
-    height: 3cm;
-}
+
+
 
 .chart {
     width: 90%;
@@ -251,11 +251,14 @@ footer {
     }
 
     .chart-filters {
-        flex-direction: column;
+        display: flex; /* Add this line to make the buttons next to each other */
+        flex-direction: row; /* Add this line to make the buttons next to each other */
+        justify-content: center; /* Add this line to center the buttons horizontally */
+        padding: 40px;
     }
     
     .chart-filters .button {
-        margin: 10px 0;
+        margin: 0 10px; /* Adjust the margin to create spacing between the buttons */
     }
 }
 
