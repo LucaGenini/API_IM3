@@ -121,7 +121,7 @@ $matches = fetchRecentMatches($pdo);
         </div>
     </section>
 
-    ><section class="introduction">
+    <br><section class="introduction">
     
     <p>Im Fußball wird oft behauptet, dass der Marktwert und die finanziellen Mittel eines Teams entscheidend für den sportlichen Erfolg sind. Doch wie groß ist der tatsächliche Einfluss von Geld auf die Leistung? Mit unserem Projekt wollen wir genau diese Frage untersuchen.
     Wir analysieren, wie sich Teams mit hohem Marktwert im Vergleich zu finanziell kleineren, ressourcenschwächeren Vereinen schlagen. Dazu betrachten wir alle Spiele der diesjährigen Champions-League-Mannschaften – sowohl nationale als auch internationale Wettbewerbe. 
