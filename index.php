@@ -196,7 +196,9 @@ $matches = fetchRecentMatches($pdo);
     </section>
 
     <footer>
-        <p>&copy; 2024 CL Capital | Alle Rechte vorbehalten</p>
+        <p>&copy; 2024 CL Capital | Alle Rechte vorbehalten
+        <br> Luca Genini und Timo Steiner
+        </p>
     </footer>
 
     <!-- Chart.js CDN -->
